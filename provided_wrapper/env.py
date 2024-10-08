@@ -1,4 +1,5 @@
 import gymnasium as gym
+from gymnasium.spaces import Discrete, MultiDiscrete, Box
 
 import grid2op
 from grid2op import gym_compat
@@ -6,6 +7,7 @@ from grid2op.Parameters import Parameters
 from grid2op.Action import PlayableAction
 from grid2op.Observation import CompleteObservation
 from grid2op.Reward import L2RPNReward, N1Reward, CombinedScaledReward
+from grid2op.gym_compat import DiscreteActSpace, BoxGymObsSpace
 
 from lightsim2grid import LightSimBackend
 
@@ -56,18 +58,40 @@ class Gym2OpEnv(gym.Env):
 
         self.observation_space = self._gym_env.observation_space
         self.action_space = self._gym_env.action_space
+        
+        
+    # The information i used to get the code for the below 2 functions is fromm the getting started from the Grid2Op github.
+    # specifcally theis link was useful at helping change the observation and action spaces to use with gymnasium : https://github.com/rte-france/Grid2Op/blob/c71a2dfb824dae7115394266e02cc673c8633a0e/getting_started/11_IntegrationWithExistingRLFrameworks.ipynb
+    # these links also help explain the observation and action space: 
+        # https://github.com/rte-france/Grid2Op/blob/c71a2dfb824dae7115394266e02cc673c8633a0e/getting_started/02_Observation.ipynb
+        # https://github.com/rte-france/Grid2Op/blob/c71a2dfb824dae7115394266e02cc673c8633a0e/getting_started/03_Action.ipynb
 
     def setup_observations(self):
         # TODO: Your code to specify & modify the observation space goes here
         # See Grid2Op 'getting started' notebooks for guidance
         #  - Notebooks: https://github.com/rte-france/Grid2Op/tree/master/getting_started
+        
+        # The code below is simple code too make the Grid2Op observation space compatible with gymnasiam and whichever stable baselines function we use.
+        
+        # Note: I haven't testing this code yet, as the PPO function I used allowed me to take in a Dict as the observation space, and hence i did nt need to change the type of the observation space.
+        
+        # see the link mentioned above in my comment to see more information about this code and more code about changing the observation space.
+        
+        #obs_attr_to_keep = ["rho", "gen_p", "load_p", "topo_vect", "actual_dispatch"]
+        #self._gym_env.observation_space.close()
+        #self._gym_env.observation_space = BoxGymObsSpace(self._g2op_env.observation_space, attr_to_keep=obs_attr_to_keep)
+        
         print("WARNING: setup_observations is not doing anything. Implement your own code in this method.")
 
     def setup_actions(self):
         # TODO: Your code to specify & modify the action space goes here
         # See Grid2Op 'getting started' notebooks for guidance
         #  - Notebooks: https://github.com/rte-france/Grid2Op/tree/master/getting_started
-        print("WARNING: setup_actions is not doing anything. Implement your own code in this method.")
+        
+        self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=["set_bus" , "set_line_status_simple"])
+        
+        
+        #print("WARNING: setup_actions is not doing anything. Implement your own code in this method.")
 
     def reset(self, seed=None):
         return self._gym_env.reset(seed=seed, options=None)
