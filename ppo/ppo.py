@@ -11,51 +11,47 @@ import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-# this is a very basic of the initial implementaion of PPO.
-# I used the random agent code in "env.py" as a template to help use PPO to "step" through the environment.
-
-# Note: i dont think this initial implementation is finished yet. I have just gotten the PPO "learn" function to run with our errors and to use that agent to step through the environment without erros.
-# I followed the simple stable baselines example of PPO to implement it, therefore there is potentiallyy more that can be and needs to bedoen regarding PPO, this was just to get it to runn with out errors etc.
-
-
-
-# evaluvation plots i want to do:
-
-# rewards over episodes - averaged over 100 runs
-# steps per episode
-# losses per episodes
-
-
 def main():
-
-    max_steps = 3
 
     env = Gym2OpEnv()
     env = Monitor(env)
-    
-    print("#####################")
-    print("# OBSERVATION SPACE #")
-    print("#####################")
-    print(env.observation_space)
-    print("#####################\n")
 
-    print("#####################")
-    print("#   ACTION SPACE    #")
-    print("#####################")
-    print(env.action_space)
-    print("#####################\n\n")
-    
 
     run = wandb.init(
         project="RL_project",
+        name = "PPO_Baseline",
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         monitor_gym=True,  # auto-upload the videos of agents playing the game
         save_code=True,  # optional
     )
 
 
-
-    model = PPO("MultiInputPolicy", env, verbose=1, device=device, tensorboard_log=f"runs/{run.id}")
+    model = PPO("MultiInputPolicy",
+                env,
+                verbose=1,
+                device=device,
+                tensorboard_log=f"runs/{run.id}",
+                learning_rate=0.0003,
+                n_steps=2048,
+                batch_size=64,
+                n_epochs=10,
+                gamma=0.99,
+                gae_lambda=0.95,
+                clip_range=0.2,
+                clip_range_vf=None,
+                normalize_advantage=True,
+                ent_coef=0.0,
+                vf_coef=0.5,
+                max_grad_norm=0.5,
+                use_sde=False,
+                sde_sample_freq=-1,
+                rollout_buffer_class=None,
+                rollout_buffer_kwargs=None,
+                target_kl=None,
+                stats_window_size=100,
+                _init_setup_model=True)
+    
+    
     model.learn(total_timesteps=25000, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
 
     run.finish()
@@ -70,7 +66,7 @@ def main():
     print(f"\t info = {info}\n\n")
 
         
-    while not is_done and curr_step < max_steps:
+    while not is_done:
         action, _states = model.predict(obs)
         obs, reward, terminated, truncated, info = env.step(action)
 
@@ -78,12 +74,12 @@ def main():
         curr_return += reward
         is_done = terminated or truncated
 
-        print(f"step = {curr_step}: ")
-        print(f"\t obs = {obs}")
-        print(f"\t reward = {reward}")
-        print(f"\t terminated = {terminated}")
-        print(f"\t truncated = {truncated}")
-        print(f"\t info = {info}")
+        #print(f"step = {curr_step}: ")
+        #print(f"\t obs = {obs}")
+        #print(f"\t reward = {reward}")
+        #print(f"\t terminated = {terminated}")
+        #print(f"\t truncated = {truncated}")
+        #print(f"\t info = {info}")
 
         is_action_valid = not (info["is_illegal"] or info["is_ambiguous"])
         print(f"\t is action valid = {is_action_valid}")
