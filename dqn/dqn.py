@@ -9,7 +9,7 @@ from stable_baselines3 import DQN
 from wandb.integration.sb3 import WandbCallback
 import torch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+from sb3_contrib import QRDQN
 
 
 def main():
@@ -18,7 +18,7 @@ def main():
     
     run = wandb.init(
         project="RL_project",
-        name = "DQN_Baseline",
+        name = "QR-DQN_Baseline",
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         monitor_gym=True,  # auto-upload the videos of agents playing the game
         save_code=False,  # optional
@@ -44,8 +44,14 @@ def main():
                 exploration_final_eps = 0.05,
                 max_grad_norm =10)
     
+    policy_kwargs = dict(n_quantiles=50)
+    model2 = QRDQN("MultiInputPolicy", "CartPole-v1", policy_kwargs=policy_kwargs, verbose=1)
+    model2.learn(total_timesteps=25000, log_interval=10, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
+    
+    
+    
     #Training the model
-    model.learn(total_timesteps = 25000, log_interval = 10, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
+    #model.learn(total_timesteps = 25000, log_interval = 10, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
     
     run.finish()
     
