@@ -1,10 +1,8 @@
 #!/bin/bash
 
 #SBATCH --job-name=RL_base
-#SBATCH --output=/home-mscluster/zschwark/RL_assignment/output_logs/PPO_baseline_output_logs.out
-#SBATCH -e /home-mscluster/zschwark/RL_assignment/output_logs/PPO_baseline_err.err
+#SBATCH --output=/home-mscluster/zschwark/RL_assignment/output_logs/PPO_baseline_output_logs.txt
 #SBATCH -N 1
-#SBATCH -n 2
 #SBATCH -p stampede
 
 source ~/.bashrc

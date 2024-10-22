@@ -2,10 +2,9 @@
 
 name: rl_assignment
 channels:
-  - conda-forge
+  - conda
 dependencies:
   - python>=3.12.0
-  - miniconda
   - pip
   - pip:
     - -r file:requirements.txt

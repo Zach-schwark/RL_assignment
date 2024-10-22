@@ -41,7 +41,7 @@ def main():
                 tensorboard_log=f"runs/{run.id}")
     
     
-    model.learn(total_timesteps=25000, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
+    model.learn(total_timesteps=1000000, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
 
     run.finish()
 
