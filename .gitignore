@@ -1,0 +1,13 @@
+
+
+# ignore wandb stuff
+/wandb
+/runs
+
+# ignore models saved
+/models
+
+# ignore pycache
+
+/provided_wrapper/__pycache__
+/dqn/__pycache__
