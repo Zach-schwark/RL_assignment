@@ -76,6 +76,8 @@ class Gym2OpEnv(gym.Env):
     def setup_observations(self):
         
         attr_to_keep_3 = ['a_ex', 'a_or', 'active_alert', 'actual_dispatch', 'alert_duration','attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'last_alarm', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'storage_charge','storage_power', 'storage_power_target', 'storage_theta', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line','time_before_cooldown_sub', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year']#so far the best
+        
+        attr_to_keep_3_remove_storage = ['a_ex', 'a_or', 'active_alert', 'actual_dispatch', 'alert_duration','attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'last_alarm', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line','time_before_cooldown_sub', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year']#so far the best
 
         #attr_to_keep_4 = ['a_ex', 'a_or',  'actual_dispatch', 'attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'storage_charge','storage_power', 'storage_power_target', 'storage_theta', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line','time_before_cooldown_sub', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year'] #this one is bad so active alert and alert duration is important
 
@@ -90,10 +92,10 @@ class Gym2OpEnv(gym.Env):
             self._gym_env.observation_space = self._gym_env.observation_space
         elif self.first_iteration == True:
             #self._gym_env.action_space.close()
-            self._gym_env.observation_space = self._gym_env.observation_space.keep_only_attr(attr_to_keep_3)
+            self._gym_env.observation_space = self._gym_env.observation_space.keep_only_attr(attr_to_keep_3_remove_storage)
         elif self.second_iteration == True:
             #self._gym_env.action_space.close()
-            self._gym_env.observation_space = self._gym_env.observation_space.keep_only_attr(attr_to_keep_3)
+            self._gym_env.observation_space = self._gym_env.observation_space.keep_only_attr(attr_to_keep_3_remove_storage)
         
         
 
@@ -103,17 +105,17 @@ class Gym2OpEnv(gym.Env):
         
         if self.baseline == True:
             #self._gym_env.action_space.close()
-            #self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space)
-            self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space)
+            self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space)
+            #self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space)
         elif self.first_iteration == True:
             #self._gym_env.action_space.close()
-            attr_to_keep = ["set_line_status_simple"]
+            attr_to_keep = ["set_bus", "set_line_status"]
             self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
             #attr_to_keep = ["redispatch", "set_storage", "curtail"]
             #self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
         elif self.second_iteration == True:
            # self._gym_env.action_space.close()
-            attr_to_keep = ["set_line_status_simple"]
+            attr_to_keep = ["set_bus", "set_line_status"]
             self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
             #attr_to_keep = ["redispatch", "set_storage", "curtail"]
             #self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
@@ -135,19 +137,19 @@ def main():
 
     max_steps = 100
 
-    env = Gym2OpEnv()
+    env = Gym2OpEnv(baseline=True, first_iteraion=False,second_iteraion=False)
 
-    #print("#####################")
-    #print("# OBSERVATION SPACE #")
-    #print("#####################")
-    #print(env.observation_space)
-    #print("#####################\n")
-#
-    #print("#####################")
-    #print("#   ACTION SPACE    #")
-    #print("#####################")
-    #print(env.action_space)
-    #print("#####################\n\n")
+    print("#####################")
+    print("# OBSERVATION SPACE #")
+    print("#####################")
+    print(env.observation_space)
+    print("#####################\n")
+
+    print("#####################")
+    print("#   ACTION SPACE    #")
+    print("#####################")
+    print(env.action_space)
+    print("#####################\n\n")
 
     curr_step = 0
     curr_return = 0
