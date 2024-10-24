@@ -109,16 +109,16 @@ class Gym2OpEnv(gym.Env):
             #self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space)
         elif self.first_iteration == True:
             #self._gym_env.action_space.close()
-            attr_to_keep = ["set_bus", "set_line_status"]
-            self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
-            #attr_to_keep = ["redispatch", "set_storage", "curtail"]
-            #self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+            #attr_to_keep = ["set_bus", "set_line_status"]
+            #self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+            attr_to_keep = ["redispatch",  "curtail"]
+            self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
         elif self.second_iteration == True:
            # self._gym_env.action_space.close()
-            attr_to_keep = ["set_bus", "set_line_status"]
-            self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
-            #attr_to_keep = ["redispatch", "set_storage", "curtail"]
-            #self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+            #attr_to_keep = ["set_bus", "set_line_status"]
+            #self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+            attr_to_keep = ["redispatch",  "curtail"]
+            self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
         
 
     def reset(self, seed=None):
@@ -137,7 +137,7 @@ def main():
 
     max_steps = 100
 
-    env = Gym2OpEnv(baseline=True, first_iteraion=False,second_iteraion=False)
+    env = Gym2OpEnv(baseline=False, first_iteraion=True,second_iteraion=False)
 
     print("#####################")
     print("# OBSERVATION SPACE #")
@@ -163,7 +163,8 @@ def main():
     while not is_done and curr_step < max_steps:
         action = env.action_space.sample()
         obs, reward, terminated, truncated, info = env.step(0)
-
+        #print(action)
+        
         curr_step += 1
         curr_return += reward
         is_done = terminated or truncated
