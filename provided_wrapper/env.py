@@ -7,7 +7,7 @@ from grid2op.Parameters import Parameters
 from grid2op.Action import PlayableAction
 from grid2op.Observation import CompleteObservation
 from grid2op.Reward import L2RPNReward, N1Reward, CombinedScaledReward
-from grid2op.gym_compat import DiscreteActSpace, BoxGymObsSpace
+from grid2op.gym_compat import  BoxGymObsSpace, DiscreteActSpace, BoxGymActSpace, MultiDiscreteActSpace
 
 from lightsim2grid import LightSimBackend
 
@@ -15,9 +15,16 @@ from lightsim2grid import LightSimBackend
 # Gymnasium environment wrapper around Grid2Op environment
 class Gym2OpEnv(gym.Env):
     def __init__(
-            self
+            self,
+            baseline: bool,
+            first_iteraion: bool,
+            second_iteraion: bool,
     ):
         super().__init__()
+        
+        self.baseline = baseline
+        self.first_iteration = first_iteraion
+        self.second_iteration = second_iteraion
 
         self._backend = LightSimBackend()
         self._env_name = "l2rpn_case14_sandbox"  # DO NOT CHANGE
@@ -67,31 +74,52 @@ class Gym2OpEnv(gym.Env):
         # https://github.com/rte-france/Grid2Op/blob/c71a2dfb824dae7115394266e02cc673c8633a0e/getting_started/03_Action.ipynb
 
     def setup_observations(self):
-        # TODO: Your code to specify & modify the observation space goes here
-        # See Grid2Op 'getting started' notebooks for guidance
-        #  - Notebooks: https://github.com/rte-france/Grid2Op/tree/master/getting_started
         
-        # The code below is simple code too make the Grid2Op observation space compatible with gymnasiam and whichever stable baselines function we use.
+        attr_to_keep_3 = ['a_ex', 'a_or', 'active_alert', 'actual_dispatch', 'alert_duration','attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'last_alarm', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'storage_charge','storage_power', 'storage_power_target', 'storage_theta', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line','time_before_cooldown_sub', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year']#so far the best
         
-        # Note: I haven't testing this code yet, as the PPO function I used allowed me to take in a Dict as the observation space, and hence i did nt need to change the type of the observation space.
+        attr_to_keep_3_remove_storage = ['a_ex', 'a_or', 'active_alert', 'actual_dispatch', 'alert_duration','attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'last_alarm', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line','time_before_cooldown_sub', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year']#so far the best
+
+        #attr_to_keep_4 = ['a_ex', 'a_or',  'actual_dispatch', 'attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'storage_charge','storage_power', 'storage_power_target', 'storage_theta', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line','time_before_cooldown_sub', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year'] #this one is bad so active alert and alert duration is important
+
+        #attr_to_keep_5 = ['a_ex', 'a_or', 'active_alert', 'actual_dispatch', 'alert_duration','attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'last_alarm', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'storage_power', 'storage_power_target', 'storage_theta', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line','time_before_cooldown_sub', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year'] #removed storage charged - does very bad
+
+        #attr_to_keep_6 = ['a_ex', 'a_or', 'active_alert', 'actual_dispatch', 'alert_duration','attention_budget', 'current_step','curtailment', 'curtailment_limit', 'curtailment_limit_effective', 'curtailment_limit_mw', 'curtailment_mw','day','day_of_week', 'delta_time', 'duration_next_maintenance', 'gen_margin_down','gen_margin_up', 'gen_p', 'gen_p_before_curtail', 'gen_q', 'gen_theta', 'gen_v','hour_of_day', 'last_alarm', 'line_status', 'load_p', 'load_q','load_theta', 'load_v', 'max_step', 'minute_of_hour', 'month', 'p_ex', 'p_or','prod_p', 'prod_q', 'prod_v', 'q_ex', 'q_or', 'rho', 'storage_charge','storage_power', 'storage_power_target', 'storage_theta', 'target_dispatch','thermal_limit', 'theta_ex', 'theta_or', 'time_before_cooldown_line', 'time_next_maintenance','timestep_overflow', 'topo_vect','v_ex', 'v_or', 'year']
+
+        attr_to_keep = ["rho", "gen_p", "load_p", "topo_vect", "actual_dispatch"]
+
+        if self.baseline == True:
+            #self._gym_env.action_space.close()
+            self._gym_env.observation_space = self._gym_env.observation_space
+        elif self.first_iteration == True:
+            #self._gym_env.action_space.close()
+            self._gym_env.observation_space = self._gym_env.observation_space.keep_only_attr(attr_to_keep_3_remove_storage)
+        elif self.second_iteration == True:
+            #self._gym_env.action_space.close()
+            self._gym_env.observation_space = self._gym_env.observation_space.keep_only_attr(attr_to_keep_3_remove_storage)
         
-        # see the link mentioned above in my comment to see more information about this code and more code about changing the observation space.
         
-        #obs_attr_to_keep = ["rho", "gen_p", "load_p", "topo_vect", "actual_dispatch"]
-        #self._gym_env.observation_space.close()
-        #self._gym_env.observation_space = BoxGymObsSpace(self._g2op_env.observation_space, attr_to_keep=obs_attr_to_keep)
-        
-        print("WARNING: setup_observations is not doing anything. Implement your own code in this method.")
+
 
     def setup_actions(self):
-        # TODO: Your code to specify & modify the action space goes here
-        # See Grid2Op 'getting started' notebooks for guidance
-        #  - Notebooks: https://github.com/rte-france/Grid2Op/tree/master/getting_started
-        
-        self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=["set_bus" , "set_line_status_simple"])
         
         
-        #print("WARNING: setup_actions is not doing anything. Implement your own code in this method.")
+        if self.baseline == True:
+            #self._gym_env.action_space.close()
+            self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space)
+            #self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space)
+        elif self.first_iteration == True:
+            #self._gym_env.action_space.close()
+            #attr_to_keep = ["set_bus", "set_line_status"]
+            #self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+            attr_to_keep = ["redispatch",  "curtail"]
+            self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+        elif self.second_iteration == True:
+           # self._gym_env.action_space.close()
+            #attr_to_keep = ["set_bus", "set_line_status"]
+            #self._gym_env.action_space = DiscreteActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+            attr_to_keep = ["redispatch",  "curtail"]
+            self._gym_env.action_space = BoxGymActSpace(self._g2op_env.action_space, attr_to_keep=attr_to_keep)
+        
 
     def reset(self, seed=None):
         return self._gym_env.reset(seed=seed, options=None)
@@ -109,7 +137,7 @@ def main():
 
     max_steps = 100
 
-    env = Gym2OpEnv()
+    env = Gym2OpEnv(baseline=False, first_iteraion=True,second_iteraion=False)
 
     print("#####################")
     print("# OBSERVATION SPACE #")
@@ -134,26 +162,27 @@ def main():
 
     while not is_done and curr_step < max_steps:
         action = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action)
-
+        obs, reward, terminated, truncated, info = env.step(0)
+        #print(action)
+        
         curr_step += 1
         curr_return += reward
         is_done = terminated or truncated
 
-        print(f"step = {curr_step}: ")
-        print(f"\t obs = {obs}")
-        print(f"\t reward = {reward}")
-        print(f"\t terminated = {terminated}")
-        print(f"\t truncated = {truncated}")
-        print(f"\t info = {info}")
+        #print(f"step = {curr_step}: ")
+        #print(f"\t obs = {obs}")
+        #print(f"\t reward = {reward}")
+        #print(f"\t terminated = {terminated}")
+        #print(f"\t truncated = {truncated}")
+        #print(f"\t info = {info}")
 
         # Some actions are invalid (see: https://grid2op.readthedocs.io/en/latest/action.html#illegal-vs-ambiguous)
         # Invalid actions are replaced with 'do nothing' action
         is_action_valid = not (info["is_illegal"] or info["is_ambiguous"])
-        print(f"\t is action valid = {is_action_valid}")
+        #print(f"\t is action valid = {is_action_valid}")
         if not is_action_valid:
             print(f"\t\t reason = {info['exception']}")
-        print("\n")
+        #print("\n")
 
     print("###########")
     print("# SUMMARY #")
