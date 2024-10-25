@@ -15,21 +15,22 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def main():
     
-    #if len(sys.argv) != 2:
-    #    exit()
-    #
-    #version = sys.argv[1]
+    if len(sys.argv) != 2:
+        exit()
     
-    baseline= True
+    version = sys.argv[1]
+
+    baseline = False
     first = False
-    second = False
+    second = False	
+
     
-    #if version == 'baseline':
-    #    baseline = True
-    #elif version == 'first':
-    #    first = True
-    #elif version == 'second':
-    #    second = True
+    if version == 'baseline':
+        baseline = True
+    elif version == 'first':
+        first = True
+    elif version == 'second':
+        second = True
         
     env = Gym2OpEnv(baseline=baseline, first_iteraion=first,second_iteraion=second)
     env = Monitor(env)
@@ -43,7 +44,7 @@ def main():
 
     run = wandb.init(
         project="RL_project",
-        name = "PPO_Baseline_discAct",
+        name = "PPO_Baseline",
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         monitor_gym=True,  # auto-upload the videos of agents playing the game
         save_code=False,  # optional
