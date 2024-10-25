@@ -2,6 +2,8 @@ import gymnasium as gym
 import grid2op
 import sys
 from stable_baselines3.common.monitor import Monitor
+import tqdm
+display_tqdm = False  # this is set to False for ease with the unitt test, feel free to set it to True
 import wandb
 sys.path.insert(0,"./")
 from provided_wrapper.env import Gym2OpEnv
@@ -12,9 +14,32 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def main():
+    
+    if len(sys.argv) != 2:
+        exit()
+    
+    version = sys.argv[1]
 
-    env = Gym2OpEnv()
+    baseline = False
+    first = False
+    second = False	
+
+    
+    if version == 'baseline':
+        baseline = True
+    elif version == 'first':
+        first = True
+    elif version == 'second':
+        second = True
+        
+    env = Gym2OpEnv(baseline=baseline, first_iteraion=first,second_iteraion=second)
     env = Monitor(env)
+    
+    print("#####################")
+    print("#   ACTION SPACE    #")
+    print("#####################")
+    print(env.action_space)
+    print("#####################\n\n")
 
 
     run = wandb.init(
@@ -22,7 +47,7 @@ def main():
         name = "PPO_Baseline",
         sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
         monitor_gym=True,  # auto-upload the videos of agents playing the game
-        save_code=True,  # optional
+        save_code=False,  # optional
     )
 
 
@@ -52,7 +77,7 @@ def main():
                 _init_setup_model=True)
     
     
-    model.learn(total_timesteps=25000, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
+    model.learn(total_timesteps=1000000, callback=WandbCallback(gradient_save_freq=100,model_save_path=f"models/{run.id}",verbose=2), progress_bar=True)
 
     run.finish()
 
@@ -65,10 +90,10 @@ def main():
     print(f"\t obs = {obs}")
     print(f"\t info = {info}\n\n")
 
-        
     while not is_done:
         action, _states = model.predict(obs)
         obs, reward, terminated, truncated, info = env.step(action)
+        print(action)
 
         curr_step += 1
         curr_return += reward
@@ -86,6 +111,7 @@ def main():
         if not is_action_valid:
             print(f"\t\t reason = {info['exception']}")
         print("\n")
+
 
     print("###########")
     print("# SUMMARY #")

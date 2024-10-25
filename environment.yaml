@@ -1,0 +1,10 @@
+# environment.yaml
+
+name: rl_assignment
+channels:
+  - conda
+dependencies:
+  - python>=3.12.0
+  - pip
+  - pip:
+    - -r file:requirements.txt
