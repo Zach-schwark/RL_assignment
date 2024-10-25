@@ -18,19 +18,12 @@ def main():
     env = Gym2OpEnv(baseline=False, first_iteraion=False,second_iteraion=True)
     env = Monitor(env)
     
-    print("#####################")
-    print("#   ACTION SPACE    #")
-    print("#####################")
-    print(env.action_space)
-    print("#####################\n\n")
-
-
     run = wandb.init(
         project="RL_project",
         name = "Recurrent_PPO",
-        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
-        monitor_gym=True,  # auto-upload the videos of agents playing the game
-        save_code=False,  # optional
+        sync_tensorboard=True,  
+        monitor_gym=True,  
+        save_code=False,  
     )
 
 
@@ -63,12 +56,6 @@ def main():
         curr_return += reward
         is_done = terminated or truncated
 
-        #print(f"step = {curr_step}: ")
-        #print(f"\t obs = {obs}")
-        #print(f"\t reward = {reward}")
-        #print(f"\t terminated = {terminated}")
-        #print(f"\t truncated = {truncated}")
-        #print(f"\t info = {info}")
 
         is_action_valid = not (info["is_illegal"] or info["is_ambiguous"])
         print(f"\t is action valid = {is_action_valid}")

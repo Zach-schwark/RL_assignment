@@ -3,9 +3,12 @@
 # ignore wandb stuff
 /wandb
 /runs
+/dqn/wandb
+/dqn/runs
 
 # ignore models saved
 /models
+/dqn/models
 
 # ignore pycache
 
